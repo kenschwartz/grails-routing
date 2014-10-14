@@ -36,16 +36,23 @@ grails.project.dependency.resolution = {
 	}
 
 	dependencies {
-		compile("org.apache.camel:camel-core:${camelVersion}")
+		compile("org.apache.camel:camel-core:${camelVersion}") {
+			excludes 'slf4j-log4j12', 'slf4j-api', 'camel-test'
+		}
 		compile("org.apache.camel:camel-spring:${camelVersion}") {
-			excludes 'spring-aop', 'spring-beans', 'spring-core', 'spring-expression', 'spring-asm', 'spring-tx', 'spring-context'
+			excludes 'spring-aop', 'spring-beans', 'spring-core', 'spring-expression', 
+			'spring-asm', 'spring-tx', 'spring-context', 'spring-jdbc', 'spring-test', 'slf4j-log4j12', 'slf4j-api', 'camel-test'
 		}
 		compile("org.apache.camel:camel-groovy:${camelVersion}") {
-			excludes 'spring-context', 'spring-aop', 'spring-tx', 'groovy-all'
+			excludes 'spring-context', 'spring-aop', 'spring-tx', 'groovy-all', 'slf4j-log4j12', 'spring-test',
+			'spring-jdbc', 'camel-test'
 		}
 		compile("org.apache.camel:camel-stream:${camelVersion}")
+		{
+			excludes 'camel-core', 'camel-test', 'slf4j-log4j12'
+		}
 
-		test("org.apache.camel:camel-test:${camelVersion}") { excludes "junit" }
+		test("org.apache.camel:camel-test:${camelVersion}") { excludes "junit", 'camel-core', 'slf4j-log4j12' }
 	}
 
 	plugins {
