@@ -60,11 +60,11 @@ grails.project.dependency.resolution = {
 		{
 			excludes 'camel-core', 'camel-test', 'slf4j-log4j12'
 		}
-		compile("org.apache.activemq:activemq-camel:5.10.0") {
+		compile("org.apache.activemq:activemq-camel:5.10.0",
+			    "org.apache.activemq:activemq-pool:5.10.0") {
 			excludes 'camel-jms', 'camel-jdbc', 'camel-test', 'camel-test-spring', 'junit', 'log4j', 'spring-test', 'slf4j-log4j12', 
-			'slf4j-api', 'spring-jdbc', 'camel-test'
+			'slf4j-api', 'spring-jdbc', 'camel-test', 'spring-context'
 		}
-
 		test("org.apache.camel:camel-test:${camelVersion}") { 
 			excludes "junit", 'camel-core', 'slf4j-log4j12' 
 		}
