@@ -39,9 +39,18 @@ grails.project.dependency.resolution = {
 		compile("org.apache.camel:camel-core:${camelVersion}") {
 			excludes 'slf4j-log4j12', 'slf4j-api', 'camel-test'
 		}
-		compile("org.apache.camel:camel-spring:${camelVersion}") {
+		compile("org.apache.camel:camel-spring:${camelVersion}",
+			    "org.apache.camel:camel-jms:${camelVersion}") {
 			excludes 'spring-aop', 'spring-beans', 'spring-core', 'spring-expression', 
-			'spring-asm', 'spring-tx', 'spring-context', 'spring-jdbc', 'spring-test', 'slf4j-log4j12', 'slf4j-api', 'camel-test'
+			'spring-asm', 'spring-tx', 'spring-context', 'spring-jdbc', 'spring-test', 'slf4j-log4j12', 'slf4j-api', 'camel-test',
+			'camel-jms', 'camel-test-spring', 'camel-jdbc', 'activemq-broker', 'activemq-camel', 'activemq-client', 'activemq-jass',
+			'activemq-kahadb-store', 'activemq-pool', 'activemq-spring', 'camel-core', 'junit'
+		}
+		compile("org.apache.camel:camel-jdbc:${camelVersion}",
+			   "org.apache.camel:camel-test:${camelVersion}",
+			   "org.apache.camel:camel-test-spring:${camelVersion}") {
+			excludes 'spring-aop', 'spring-beans', 'spring-core', 'spring-expression', 
+			'spring-asm', 'spring-tx', 'spring-context', 'spring-jdbc', 'spring-test', 'slf4j-log4j12', 'slf4j-api'
 		}
 		compile("org.apache.camel:camel-groovy:${camelVersion}") {
 			excludes 'spring-context', 'spring-aop', 'spring-tx', 'groovy-all', 'slf4j-log4j12', 'spring-test',
@@ -51,8 +60,14 @@ grails.project.dependency.resolution = {
 		{
 			excludes 'camel-core', 'camel-test', 'slf4j-log4j12'
 		}
+		compile("org.apache.activemq:activemq-camel:5.10.0") {
+			excludes 'camel-jms', 'camel-jdbc', 'camel-test', 'camel-test-spring', 'junit', 'log4j', 'spring-test', 'slf4j-log4j12', 
+			'slf4j-api', 'spring-jdbc', 'camel-test'
+		}
 
-		test("org.apache.camel:camel-test:${camelVersion}") { excludes "junit", 'camel-core', 'slf4j-log4j12' }
+		test("org.apache.camel:camel-test:${camelVersion}") { 
+			excludes "junit", 'camel-core', 'slf4j-log4j12' 
+		}
 	}
 
 	plugins {
