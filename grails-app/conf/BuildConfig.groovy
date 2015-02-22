@@ -23,10 +23,10 @@ grails.project.fork = [
 ]
 
 grails.project.repos.default = "kmsRepo"
-grails.project.repos.kmsRepo.url = "http://192.168.1.8:8081/artifactory/plugins-release-local"
+grails.project.repos.kmsRepo.url = "https://wiki.wikigood.com/artifactory/plugins-release-local"
 grails.project.repos.kmsRepo.type = "maven"
 grails.project.repos.kmsRepo.username = "admin"
-grails.project.repos.kmsRepo.password = "password"
+grails.project.repos.kmsRepo.password = "xxxxx"
 
 grails.project.dependency.resolver = "maven" // or ivy
 
