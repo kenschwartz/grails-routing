@@ -10,7 +10,7 @@ import org.springframework.beans.factory.config.MethodInvokingFactoryBean
 import javax.activation.DataHandler
 
 class RoutingGrailsPlugin {
-	def version          = '1.3.3.3'
+	def version          = '1.3.3.6'
 	def grailsVersion    = '2.0.0 > *'
 	def loadAfter        = ['controllers', 'services']
 	def artefacts        = [new RouteArtefactHandler()]
@@ -35,10 +35,26 @@ class RoutingGrailsPlugin {
 		def trace = config?.trace ?: false
 		def routeClasses = application.routeClasses
 
+		jmsConnectionFactory(org.apache.activemq.ActiveMQConnectionFactory) {
+			brokerURL = config?.brokerURL ?: 'vm://LocalBroker'
+			userName  = config?.userName  ?: ''
+            password  = config?.password  ?: ''
+		}
+
+		pooledConnectionFactory(org.apache.activemq.pool.PooledConnectionFactory) { bean ->
+			bean.initMethod = 'start'
+			bean.destroyMethod = 'stop'
+			maxConnections = config?.maxConnections ?: 8
+			connectionFactory = ref('jmsConnectionFactory')
+		}
+
+		jmsConfig(org.apache.camel.component.jms.JmsConfiguration) {
+			connectionFactory = ref('pooledConnectionFactory')
+			concurrentConsumers = config?.concurrentConsumers ?: 10
+		}
+
 		activemq(org.apache.activemq.camel.component.ActiveMQComponent) {
-			brokerURL = config.brokerURL ?: 'vm://LocalBroker'
-            userName  = config.userName  ?: ''
-            password  = config.password  ?: ''
+			configuration = ref('jmsConfig')
 		}
 
 		initializeRouteBuilderHelpers()
@@ -64,11 +80,11 @@ class RoutingGrailsPlugin {
 		// this may cause problems if autostarted camel start invoking routes which calls service/controller
 		// methods, which use dynamically injected methods
 		// because doWithDynamicMethods is called after doWithSpring
-		camel.camelContext(id: camelContextId, 
-                                   useMDCLogging: useMDCLogging, 
-                                   autoStartup: false, 
-                                   streamCache: streamCache,
-                                   trace: trace) {
+		camel.camelContext(id: camelContextId,
+			               useMDCLogging: useMDCLogging,
+			               autoStartup: false,
+			               streamCache: streamCache,
+			               trace: trace) {
 			def threadPoolProfileConfig = config?.defaultThreadPoolProfile
 
 			camel.threadPoolProfile(
@@ -98,9 +114,10 @@ class RoutingGrailsPlugin {
 
 		// otherwise we autostart camelContext here
 		def config = application.config.grails.routing
+		def autoStartup = config?.autoStartup ?: true
 
-		if (config.autoStartup != false) {
-                        def camelContextId = config.camelContextId ?: 'camelContext'
+		if (autoStartup != false) {
+			def camelContextId = config?.camelContextId ?: 'camelContext'
 			application.mainContext.getBean(camelContextId).start()
 		}
 	}
