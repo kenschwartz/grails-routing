@@ -10,7 +10,7 @@ import org.springframework.beans.factory.config.MethodInvokingFactoryBean
 import javax.activation.DataHandler
 
 class RoutingGrailsPlugin {
-	def version          = '1.3.3.6'
+	def version          = '1.3.3.7'
 	def grailsVersion    = '2.0.0 > *'
 	def loadAfter        = ['controllers', 'services']
 	def artefacts        = [new RouteArtefactHandler()]
@@ -29,6 +29,9 @@ class RoutingGrailsPlugin {
 
 	def doWithSpring = {
 		def config = application.config.grails.routing
+
+        // if camelContextId is changed then you have to use the 'new' name to inject the camelContext into
+        // grails code
 		def camelContextId = config?.camelContextId ?: 'camelContext'
 		def useMDCLogging = config?.useMDCLogging ?: false
 		def streamCache = config?.streamCache ?: false
@@ -109,14 +112,14 @@ class RoutingGrailsPlugin {
 		addDynamicMethods(application.serviceClasses, template)
 
 		if (isQuartzPluginInstalled(application)) {
-			addDynamicMethods(application.taskClasses, template)
+			addDynamicMethods(application.jobClasses, template)
 		}
 
 		// otherwise we autostart camelContext here
 		def config = application.config.grails.routing
 		def autoStartup = config?.autoStartup ?: true
 
-		if (autoStartup != false) {
+		if (autoStartup) {
 			def camelContextId = config?.camelContextId ?: 'camelContext'
 			application.mainContext.getBean(camelContextId).start()
 		}
@@ -197,7 +200,7 @@ class RoutingGrailsPlugin {
 	private isQuartzPluginInstalled(application) {
 		// this is a nasty implementation... maybe there's something better?
 		try {
-			def tasks = application.taskClasses
+			def tasks = application.jobClasses
 			return true
 		} catch (e) {
 			return false
