@@ -10,7 +10,7 @@ import org.springframework.beans.factory.config.MethodInvokingFactoryBean
 import javax.activation.DataHandler
 
 class RoutingGrailsPlugin {
-	def version          = '1.4.0.1-SNAPSHOT'
+	def version          = '1.4.0.2-SNAPSHOT'
 	def grailsVersion    = '2.0.0 > *'
 	def loadAfter        = ['controllers', 'services']
 	def artefacts        = [new RouteArtefactHandler()]
