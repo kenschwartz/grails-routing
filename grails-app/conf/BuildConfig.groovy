@@ -44,7 +44,7 @@ grails.project.dependency.resolution = {
 
 	dependencies {
 		compile("org.apache.camel:camel-core:${camelVersion}") {
-			excludes 'slf4j-log4j12', 'slf4j-api'
+			excludes 'slf4j-log4j12', 'slf4j-api', 'junit'
 		}
 		compile("org.apache.camel:camel-spring:${camelVersion}",
 			    "org.apache.camel:camel-jms:${camelVersion}") {
@@ -58,19 +58,25 @@ grails.project.dependency.resolution = {
 			   "org.apache.camel:camel-test:${camelVersion}",
 			   "org.apache.camel:camel-test-spring:${camelVersion}") {
 			excludes 'camel-core', 'camel-spring', 'spring-aop', 'spring-beans', 'spring-core', 'spring-expression',
-                     'spring-asm', 'spring-tx', 'spring-context', 'spring-jdbc', 'spring-test', 'slf4j-log4j12', 'slf4j-api'
+                     'spring-asm', 'spring-tx', 'spring-context', 'spring-jdbc', 'spring-test', 'slf4j-log4j12',
+                     'slf4j-api', 'junit'
 		}
 		compile("org.apache.camel:camel-groovy:${camelVersion}") {
-			excludes 'camel-core', 'camel-test-spring', 'groovy-all', 'slf4j-log4j12', 'slf4j-api'
+			excludes 'camel-core', 'camel-test-spring', 'groovy-all', 'slf4j-log4j12', 'slf4j-api', 'junit'
 		}
-		compile("org.apache.camel:camel-stream:${camelVersion}")
+        compile("org.apache.camel:camel-stream:${camelVersion}") {
+            excludes 'camel-core', 'camel-test-spring', 'slf4j-log4j12', 'slf4j-api', 'junit'
+        }
+		compile("org.apache.camel:camel-xmljson:${camelVersion}")
 		{
-			excludes 'camel-core', 'camel-test', 'slf4j-log4j12', 'slf4j-api'
+			excludes 'camel-core', 'camel-test', 'slf4j-log4j12', 'slf4j-api', 'log4j', 'groovy-all',
+                     'commons-lang', 'junit', ' servlet-api', 'logkit'
 		}
 		compile("org.apache.activemq:activemq-camel:${activeMqVersion}",
 			    "org.apache.activemq:activemq-pool:${activeMqVersion}") {
 			excludes 'camel-jms', 'camel-jdbc', 'camel-test', 'camel-test-spring', 'camel-test-spring3', 'junit',
-                     'log4j', 'spring-test', 'slf4j-log4j12', 'slf4j-api', 'spring-jdbc', 'camel-test', 'spring-context'
+                     'log4j', 'spring-test', 'slf4j-log4j12', 'slf4j-api', 'spring-jdbc', 'camel-test',
+                     'spring-context'
 		}
 	}
 
