@@ -1,6 +1,7 @@
 grails.project.work.dir = 'target'
 
-def camelVersion = '2.13.2'
+def camelVersion = '2.13.3'
+def activeMqVersion = '5.11.1'
 
 grails.project.fork = [
 
@@ -23,7 +24,7 @@ grails.project.fork = [
 ]
 
 grails.project.repos.default = "kmsRepo"
-grails.project.repos.kmsRepo.url = "http://wiki.wikigood.com/artifactory/plugins-release-local"
+grails.project.repos.kmsRepo.url = "https://wiki.wikigood.com/artifactory/plugins-release-local"
 grails.project.repos.kmsRepo.type = "maven"
 grails.project.repos.kmsRepo.username = "admin"
 grails.project.repos.kmsRepo.password = ''
@@ -66,8 +67,8 @@ grails.project.dependency.resolution = {
 		{
 			excludes 'camel-core', 'camel-test', 'slf4j-log4j12'
 		}
-		compile("org.apache.activemq:activemq-camel:5.10.0",
-			    "org.apache.activemq:activemq-pool:5.10.0") {
+		compile("org.apache.activemq:activemq-camel:${activeMqVersion}",
+			    "org.apache.activemq:activemq-pool:${activeMqVersion}") {
 			excludes 'camel-jms', 'camel-jdbc', 'camel-test', 'camel-test-spring', 'junit', 'log4j', 'spring-test', 'slf4j-log4j12', 
 			'slf4j-api', 'spring-jdbc', 'camel-test', 'spring-context'
 		}
