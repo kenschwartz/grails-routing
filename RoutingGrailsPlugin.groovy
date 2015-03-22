@@ -5,15 +5,22 @@ import org.apache.camel.groovy.extend.CamelGroovyMethods
 import org.apache.camel.model.ChoiceDefinition
 import org.apache.camel.model.ProcessorDefinition
 import org.grails.plugins.routing.RouteArtefactHandler
+import org.apache.camel.model.*
+import org.grails.plugins.routing.processor.PredicateProcessor
 import org.springframework.beans.factory.config.MethodInvokingFactoryBean
 
 import javax.activation.DataHandler
 
+import javax.security.auth.Subject
+
 class RoutingGrailsPlugin {
-	def version          = '1.4.0.3-SNAPSHOT'
+	def version          = '1.4.1.1-SNAPSHOT'
 	def grailsVersion    = '2.0.0 > *'
-	def loadAfter        = ['controllers', 'services']
 	def artefacts        = [new RouteArtefactHandler()]
+	def dependsOn        = [:]
+	def loadAfter        = [ 'controllers', 'services' ]
+	def author           = 'Matthias Hryniszak, Chris Navta, Arief Hidaya'
+	def authorEmail      = 'padcom@gmail.com, chris@ix-n.com'
 	def documentation    = 'http://grails.org/plugin/routing'
 	def title            = 'Apache Camel Plugin'
 	def description      = 'Provides message routing capabilities using Apache Camel'
@@ -36,6 +43,8 @@ class RoutingGrailsPlugin {
 		def useMDCLogging = config?.useMDCLogging ?: false
 		def streamCache = config?.streamCache ?: false
 		def trace = config?.trace ?: false
+        def useSpringSecurity =  config?.useSpringSecurity ?: false
+        def authorizationPolicies = config?.authorizationPolicies ?: []
 		def routeClasses = application.routeClasses
 
 		jmsConnectionFactory(org.apache.activemq.ActiveMQConnectionFactory) {
@@ -77,6 +86,18 @@ class RoutingGrailsPlugin {
 			}
 		}
 
+	  if(useSpringSecurity) {
+          
+            xmlns camelSecure:'http://camel.apache.org/schema/spring-security'
+            authorizationPolicies?.each {
+                camelSecure.authorizationPolicy(id : it.id, access: it.access,
+                        accessDecisionManager : it.accessDecisionManager ?: "accessDecisionManager",
+                        authenticationManager: it.authenticationManager ?: "authenticationManager",
+                        useThreadSecurityContext : it.useThreadSecurityContext ?: true,
+                        alwaysReauthenticate : it.alwaysReauthenticate ?: false)
+            }
+	  }
+
 		xmlns camel:'http://camel.apache.org/schema/spring'
 
 		// we don't allow camel autostart regardless to autoStartup value
@@ -88,7 +109,7 @@ class RoutingGrailsPlugin {
 			               autoStartup: false,
 			               streamCache: streamCache,
 			               trace: trace) {
-			def threadPoolProfileConfig = config?.defaultThreadPoolProfile
+            def threadPoolProfileConfig = config?.defaultThreadPoolProfile
 
 			camel.threadPoolProfile(
 				id: "defaultThreadPoolProfile",
@@ -145,22 +166,18 @@ class RoutingGrailsPlugin {
 	// ------------------------------------------------------------------------
 
 	private initializeRouteBuilderHelpers() {
+        //
+        // only filter predicate. but looks like it's been handled. https://camel.apache.org/groovy-dsl.html
 		ProcessorDefinition.metaClass.filter = { filter ->
 			if (filter instanceof Closure) {
-				CamelGroovyMethods.filter(delegate, filter)
-			} else {
-				delegate.filter(filter)
+				filter = new PredicateProcessor(filter)
 			}
 		}
-
 		ChoiceDefinition.metaClass.when = { filter ->
 			if (filter instanceof Closure) {
-				CamelGroovyMethods.when(delegate, filter)
-			} else {
-				delegate.when(filter)
+                filter = new PredicateProcessor(filter)
 			}
 		}
-
 		ProcessorDefinition.metaClass.process = { filter ->
 			if (filter instanceof Closure) {
 				CamelGroovyMethods.process(delegate, filter)
@@ -172,6 +189,16 @@ class RoutingGrailsPlugin {
 
 	private addDynamicMethods(artifacts, template) {
 		artifacts?.each { artifact ->
+            artifact.metaClass.sendMessageWithAuth = { endpoint, message, auth ->
+                def headers = [:];
+                headers.put(Exchange.AUTHENTICATION, new Subject(true, [auth] as Set, [] as Set, [] as Set))
+                template.sendBodyAndHeaders(endpoint,message, headers)
+            }
+            artifact.metaClass.requestMessageWithAuth = { endpoint, message, auth ->
+                def headers = [:];
+                headers.put(Exchange.AUTHENTICATION, new Subject(true, [auth] as Set, [] as Set, [] as Set))
+                template.requestBodyAndHeaders(endpoint,message, headers)
+            }
 			artifact.metaClass.sendMessage = { endpoint,message ->
 				template.sendBody(endpoint,message)
 			}
