@@ -1,6 +1,6 @@
 grails.project.work.dir = 'target'
 
-def camelVersion = '2.15.0'
+def camelVersion = '2.14.2'
 def activeMqVersion = '5.11.1'
 
 grails.project.fork = [
@@ -52,7 +52,7 @@ grails.project.dependency.resolution = {
 			         'spring-asm', 'spring-tx', 'spring-context', 'spring-jdbc', 'spring-test', 'slf4j-log4j12', 'slf4j-api',
                      'camel-test', 'camel-test-spring', 'camel-jdbc', 'activemq-broker', 'activemq-camel',
                      'activemq-client', 'activemq-jass', 'activemq-kahadb-store', 'activemq-pool', 'activemq-spring',
-                     'camel-core', 'junit'/*, 'spring-jms' test won't bass with this*/
+                     'camel-core', 'junit'/*, 'spring-jms' test won't pass with this*/
 		}
 		compile("org.apache.camel:camel-jdbc:${camelVersion}",
 			   "org.apache.camel:camel-test:${camelVersion}",
