@@ -14,7 +14,7 @@ import javax.activation.DataHandler
 import javax.security.auth.Subject
 
 class RoutingGrailsPlugin {
-	def version          = '1.4.2.0-SNAPSHOT'
+	def version          = '1.4.0.4-SNAPSHOT'
 	def grailsVersion    = '2.0.0 > *'
 	def artefacts        = [new RouteArtefactHandler()]
 	def dependsOn        = [:]
