@@ -44,7 +44,8 @@ grails.project.dependency.resolution = {
 
 	dependencies {
 		compile("org.apache.camel:camel-core:${camelVersion}") {
-			excludes 'slf4j-log4j12', 'slf4j-api', 'junit'
+			excludes 'slf4j-log4j12', 'slf4j-api', 'junit',
+                    'jaxb-impl', 'jaxb-xjc', 'jaxb-api', 'jaxb-core'
 		}
 		compile("org.apache.camel:camel-spring:${camelVersion}",
 			    "org.apache.camel:camel-jms:${camelVersion}") {
