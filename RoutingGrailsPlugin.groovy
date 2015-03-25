@@ -142,7 +142,7 @@ class RoutingGrailsPlugin {
 
 		if (autoStartup) {
 			def camelContextId = config?.camelContextId ?: 'camelContext'
-			application.mainContext.getBean(camelContextId).start()
+			application.mainContext.getBean(camelContextId).startAllRoutes()
 		}
 	}
 
