@@ -225,12 +225,6 @@ class RoutingGrailsPlugin {
 	}
 
 	private isQuartzPluginInstalled(application) {
-		// this is a nasty implementation... maybe there's something better?
-		try {
-			def tasks = application.jobClasses
-			return true
-		} catch (e) {
-			return false
-		}
+		return application.getArtefactInfo('Job') != null
 	}
 }
