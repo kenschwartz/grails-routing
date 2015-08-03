@@ -14,7 +14,7 @@ import javax.activation.DataHandler
 import javax.security.auth.Subject
 
 class RoutingGrailsPlugin {
-	def version          = '1.4.1.1-SNAPSHOT'
+	def version          = '1.4.1'
 	def grailsVersion    = '2.0.0 > *'
 	def artefacts        = [new RouteArtefactHandler()]
 	def dependsOn        = [:]
@@ -35,82 +35,56 @@ class RoutingGrailsPlugin {
 	def scm = [url: "https://github.com/padcom/grails-routing"]
 
 	def doWithSpring = {
-		def config = application.config.grails.routing
+	  def config = application.config.grails.routing
+	  def camelContextId = config?.camelContextId ?: 'camelContext'
+	  def useMDCLogging = config?.useMDCLogging ?: false
+	  def streamCache = config?.streamCache ?: false
+	  def trace = config?.trace ?: false
+	  def useSpringSecurity =  config?.useSpringSecurity ?: false
+	  def authorizationPolicies = config?.authorizationPolicies ?: []
+	  def routeClasses = application.routeClasses
 
-        // if camelContextId is changed then you have to use the 'new' name to inject the camelContext into
-        // grails code
-		def camelContextId = config?.camelContextId ?: 'camelContext'
-		def useMDCLogging = config?.useMDCLogging ?: false
-		def streamCache = config?.streamCache ?: false
-		def trace = config?.trace ?: false
-        def useSpringSecurity =  config?.useSpringSecurity ?: false
-        def authorizationPolicies = config?.authorizationPolicies ?: []
-		def routeClasses = application.routeClasses
+	  initializeRouteBuilderHelpers()
 
-		jmsConnectionFactory(org.apache.activemq.ActiveMQConnectionFactory) {
-			brokerURL = config?.brokerURL ?: 'vm://LocalBroker'
-			userName  = config?.userName  ?: ''
-            password  = config?.password  ?: ''
-		}
+	  routeClasses.each { routeClass ->
+	    def fullName = routeClass.fullName
 
-		pooledConnectionFactory(org.apache.activemq.pool.PooledConnectionFactory) { bean ->
-			bean.initMethod = 'start'
-			bean.destroyMethod = 'stop'
-			maxConnections = config?.maxConnections ?: 8
-			connectionFactory = ref('jmsConnectionFactory')
-		}
+	    "${fullName}Class"(MethodInvokingFactoryBean) {
+	      targetObject = ref("grailsApplication", true)
+	      targetMethod = "getArtefact"
+	      arguments = [RouteArtefactHandler.ROUTE, fullName]
+	    }
 
-		jmsConfig(org.apache.camel.component.jms.JmsConfiguration) {
-			connectionFactory = ref('pooledConnectionFactory')
-			concurrentConsumers = config?.concurrentConsumers ?: 10
-		}
-
-		activemq(org.apache.activemq.camel.component.ActiveMQComponent) {
-			configuration = ref('jmsConfig')
-		}
-
-		initializeRouteBuilderHelpers()
-
-		routeClasses.each { routeClass ->
-			def fullName = routeClass.fullName
-
-			"${fullName}Class"(MethodInvokingFactoryBean) {
-				targetObject = ref("grailsApplication", true)
-				targetMethod = "getArtefact"
-				arguments = [RouteArtefactHandler.ROUTE, fullName]
-			}
-
-			"${fullName}"(ref("${fullName}Class")) { bean ->
-				bean.factoryMethod = "newInstance"
-				bean.autowire = "byName"
-			}
-		}
+	    "${fullName}"(ref("${fullName}Class")) { bean ->
+	      bean.factoryMethod = "newInstance"
+	      bean.autowire = "byName"
+	    }
+	  }
 
 	  if(useSpringSecurity) {
-          
+
             xmlns camelSecure:'http://camel.apache.org/schema/spring-security'
             authorizationPolicies?.each {
-                camelSecure.authorizationPolicy(id : it.id, access: it.access,
-                        accessDecisionManager : it.accessDecisionManager ?: "accessDecisionManager",
-                        authenticationManager: it.authenticationManager ?: "authenticationManager",
-                        useThreadSecurityContext : it.useThreadSecurityContext ?: true,
-                        alwaysReauthenticate : it.alwaysReauthenticate ?: false)
+	      camelSecure.authorizationPolicy(id : it.id, access: it.access,
+					      accessDecisionManager : it.accessDecisionManager ?: "accessDecisionManager",
+					      authenticationManager: it.authenticationManager ?: "authenticationManager",
+					      useThreadSecurityContext : it.useThreadSecurityContext ?: true,
+					      alwaysReauthenticate : it.alwaysReauthenticate ?: false)
             }
 	  }
 
-		xmlns camel:'http://camel.apache.org/schema/spring'
+	  xmlns camel:'http://camel.apache.org/schema/spring'
 
 		// we don't allow camel autostart regardless to autoStartup value
 		// this may cause problems if autostarted camel start invoking routes which calls service/controller
 		// methods, which use dynamically injected methods
 		// because doWithDynamicMethods is called after doWithSpring
-		camel.camelContext(id: camelContextId,
-			               useMDCLogging: useMDCLogging,
-			               autoStartup: false,
-			               streamCache: streamCache,
-			               trace: trace) {
-            def threadPoolProfileConfig = config?.defaultThreadPoolProfile
-
+		camel.camelContext(id: camelContextId, 
+                                   useMDCLogging: useMDCLogging, 
+                                   autoStartup: false, 
+                                   streamCache: streamCache,
+                                   trace: trace) {
+			def threadPoolProfileConfig = config?.defaultThreadPoolProfile
 			camel.threadPoolProfile(
 				id: "defaultThreadPoolProfile",
 				defaultProfile: "true",
@@ -138,11 +112,10 @@ class RoutingGrailsPlugin {
 
 		// otherwise we autostart camelContext here
 		def config = application.config.grails.routing
-		def autoStartup = config?.autoStartup ?: true
 
-		if (autoStartup) {
-			def camelContextId = config?.camelContextId ?: 'camelContext'
-			application.mainContext.getBean(camelContextId).start()
+		if (config.autoStartup != false) {
+                        def camelContextId = config.camelContextId ?: 'camelContext'
+			application.mainContext.getBean(camelContextId).startAllRoutes()
 		}
 	}
 
@@ -199,8 +172,8 @@ class RoutingGrailsPlugin {
                 headers.put(Exchange.AUTHENTICATION, new Subject(true, [auth] as Set, [] as Set, [] as Set))
                 template.requestBodyAndHeaders(endpoint,message, headers)
             }
-			artifact.metaClass.sendMessage = { endpoint,message ->
-				template.sendBody(endpoint,message)
+			artifact.metaClass.sendMessage = { endpoint, message ->
+                template.sendBody(endpoint,message)
 			}
 			artifact.metaClass.sendMessageAndHeaders = { endpoint, message, headers ->
 				template.sendBodyAndHeaders(endpoint,message,headers)
@@ -225,12 +198,6 @@ class RoutingGrailsPlugin {
 	}
 
 	private isQuartzPluginInstalled(application) {
-		// this is a nasty implementation... maybe there's something better?
-		try {
-			def tasks = application.jobClasses
-			return true
-		} catch (e) {
-			return false
-		}
+        return application.getArtefactInfo('Job') != null
 	}
 }
